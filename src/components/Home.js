@@ -4,7 +4,7 @@ import Scheduler from './Scheduler.js';
 import axios from 'axios';
 import {Typography } from '@mui/material';
 
-const baseURL = "http://localhost:5000/api/interviews/";
+const baseURL = "https://frozen-coast-35947.herokuapp.com/api/interviews";
 
 const Home = () => {
   const [interviews, setInterviews] = useState([]);

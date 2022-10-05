@@ -11,7 +11,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { Alert, Button, Snackbar } from "@mui/material";
 import axios from "axios";
 
-const baseURL = "http://localhost:5000/api/";
+const baseURL = "https://frozen-coast-35947.herokuapp.com/api/";
 
 const Scheduler = ({interviews, setInterviews, interviewData}) => {
   const [title, setTitle] = useState( "Title");
@@ -97,7 +97,7 @@ const Scheduler = ({interviews, setInterviews, interviewData}) => {
     // console.log(newInterview)
     if (!editModeValue) {
     axios
-        .post(baseURL + "interviews/", newInterview)
+        .post(baseURL  + "interviews" , newInterview)
         .then((response) => {
           // console.log(response)
           setInterviews([...interviews, newInterview])})
@@ -108,7 +108,7 @@ const Scheduler = ({interviews, setInterviews, interviewData}) => {
         });
       } else {
         axios
-        .put(baseURL + "interviews/", {...newInterview,_id})
+        .put(baseURL + "interviews", {...newInterview,_id})
         .then((response) => {
           // console.log(response)
           setInterviews([...interviews.slice(0,index),{...newInterview,_id},...interviews.slice(index+1)])})
