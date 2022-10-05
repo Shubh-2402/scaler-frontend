@@ -10,7 +10,7 @@ import dayjs from "dayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { Alert, Button, Snackbar } from "@mui/material";
 import axios from "axios";
-// const values = ["Shubham","Seta","Moly","Prakul"]
+
 const baseURL = "http://localhost:5000/api/";
 
 const Scheduler = ({interviews, setInterviews, interviewData}) => {
@@ -26,20 +26,6 @@ const Scheduler = ({interviews, setInterviews, interviewData}) => {
   const [editModeValue, setEditModeValue] = useState(false);
   const [_id,setID] = useState("");
   const [index,setIndex] = useState(null);
-
-  // if(Object.keys(interviewData).length) {
-  //   const { index, editMode } = interviewData;
-  //   const cur = interviews[index];
-  //   // setTitle(cur.title);
-    
-  //   // setTitle(interviews[index].title);
-  //   // setStartTime(dayjs(new Date(interviews[index].startTime)));
-  //   // setEndTime(dayjs(new Date(interviews[index].endTime)));
-  //   // setInterviewers(interviews[index].admins);
-  //   // setInterviewees(interviews[index].participants);
-  //   // setSelectedInterviewers(interviews[index].admins);
-  //   // setSelectedInterviewees(interviews[index].participants);
-  // }
 
   useEffect(() => {
     if(Object.keys(interviewData).length) {
@@ -217,13 +203,15 @@ const Scheduler = ({interviews, setInterviews, interviewData}) => {
             sx={{ width: "500px" }}
           />
 
-          <Button variant="contained" onClick={handleSubmit}>
-            {editModeValue?"Edit":"Create Interview"}
-          </Button>
+          <div className="buttons">
+            <Button variant="contained" onClick={handleSubmit}>
+              {editModeValue?"Edit":"Create Interview"}
+            </Button>
 
-          <Button variant="contained" onClick={handleCancel}>
-            Cancel
-          </Button>
+            <Button variant="contained" onClick={handleCancel} color="error">
+              Cancel
+            </Button>
+          </div>
 
           {open && <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
         <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
