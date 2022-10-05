@@ -23,6 +23,8 @@ const Scheduler = ({ props }) => {
   const [selectedInterviewers, setSelectedInterviewers] = useState([]);
   const [selectedInterviewees, setSelectedInterviewees] = useState([]);
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState("Error");
+  
 
   const handleTitle = (e) => {
     setTitle(e.target.value);
@@ -64,52 +66,35 @@ const Scheduler = ({ props }) => {
   };
 
   const handleSubmit = () => {
-    const all = [...selectedInterviewers, ...selectedInterviewees];
+
+    var admins = [];
+    for (var i=0; i < selectedInterviewers.length ; ++i)
+        admins.push(selectedInterviewers[i]['email']);
 
     var participants = [];
-    for (var i = 0; i < all.length; ++i) participants.push(all[i]["email"]);
+    for (var j=0; j < selectedInterviewees.length ; ++j)
+    participants.push(selectedInterviewees[j]['email']);
 
     const newInterview = {
       title: title,
       startTime: startTime.toDate(),
       endTime: endTime.toDate(),
-      participants: participants,
+      admins: admins,
+      participants:participants,
     };
 
-    // console.log(newInterview.endTime.toISOString())
-    // console.log(interviews[0].startTime)
-    // console.log(newInterview.endTime.toISOString() > interviews[0].startTime);
+    // console.log(newInterview)
 
-    var conflict = false;
-
-    for(var j=0;j<interviews.length;j++){
-      const inter = interviews[j]
-      // console.log(((newInterview.endTime.toISOString() > inter.startTime) && (newInterview.endTime.toISOString() < inter.endTime)))
-      // console.log(inter)
-
-      if(((newInterview.endTime.toISOString() > inter.startTime) && (newInterview.endTime.toISOString() < inter.endTime)) || ((newInterview.startTime.toISOString() > inter.start) && (newInterview.startTime.toISOString() < inter.endTime)) || ((newInterview.endTime.toISOString() > inter.endTime) && (newInterview.startTime.toISOString() < inter.startTime)) ){
-        console.log("time")
-        const part = newInterview.participants;
-
-        for(var k=0;k<part.length;k++){
-          if(inter.participants.includes(part[k])){
-            conflict=true
-            break;
-          }
-        }
-
-      }
-    }
-    console.log(conflict)
-
-    if(conflict){
-      setOpen(true)
-    }else{
-      axios
+    axios
         .post(baseURL + "interviews/", newInterview)
-        .then((response) => setInterviews([...interviews, newInterview]));
-    }
-    // window.location.reload(true)
+        .then((response) => {
+          // console.log(response)
+          setInterviews([...interviews, newInterview])})
+        .catch((err)=>{
+          setOpen(true)
+          // console.log(err.response.data);
+          setError(err.response.data)
+        })
   };
 
   useEffect(() => {
@@ -192,7 +177,7 @@ const Scheduler = ({ props }) => {
 
           {open && <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
         <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
-          All participants are not available for the time slot 
+          {error} 
         </Alert>
       </Snackbar>}
         </Stack>
