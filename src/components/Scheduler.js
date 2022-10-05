@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import {useLocation} from 'react-router-dom';
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
@@ -12,10 +13,8 @@ import axios from "axios";
 // const values = ["Shubham","Seta","Moly","Prakul"]
 const baseURL = "http://localhost:5000/api/";
 
-const Scheduler = ({ props }) => {
-  // console.log(props)
-  const { interviews, setInterviews } = props;
-  const [title, setTitle] = useState("Title");
+const Scheduler = ({interviews, setInterviews, interviewData}) => {
+  const [title, setTitle] = useState( "Title");
   const [startTime, setStartTime] = useState(dayjs(new Date()));
   const [endTime, setEndTime] = useState(dayjs(new Date()));
   const [interviewers, setInterviewers] = useState([]);
@@ -24,6 +23,39 @@ const Scheduler = ({ props }) => {
   const [selectedInterviewees, setSelectedInterviewees] = useState([]);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("Error");
+  const [editModeValue, setEditModeValue] = useState(false);
+  const [_id,setID] = useState("");
+  const [index,setIndex] = useState(null);
+
+  // if(Object.keys(interviewData).length) {
+  //   const { index, editMode } = interviewData;
+  //   const cur = interviews[index];
+  //   // setTitle(cur.title);
+    
+  //   // setTitle(interviews[index].title);
+  //   // setStartTime(dayjs(new Date(interviews[index].startTime)));
+  //   // setEndTime(dayjs(new Date(interviews[index].endTime)));
+  //   // setInterviewers(interviews[index].admins);
+  //   // setInterviewees(interviews[index].participants);
+  //   // setSelectedInterviewers(interviews[index].admins);
+  //   // setSelectedInterviewees(interviews[index].participants);
+  // }
+
+  useEffect(() => {
+    if(Object.keys(interviewData).length) {
+      const {index, editMode} = interviewData;
+      const cur = (interviews[index]);
+      setEditModeValue(editMode)
+      setTitle(cur.title);
+      setStartTime(dayjs(new Date(cur.startTime)));
+      setEndTime(dayjs(new Date(cur.endTime)));
+      setSelectedInterviewers(cur.admins);
+      setSelectedInterviewees(cur.participants);
+      setID(cur._id)
+      setIndex(index);
+    }
+  }, [interviewData])
+  
   
 
   const handleTitle = (e) => {
@@ -51,6 +83,7 @@ const Scheduler = ({ props }) => {
   };
 
   const handleSelectionInterviewers = (e, newValue) => {
+    console.log(newValue)
     setSelectedInterviewers(newValue);
   };
   const handleSelectionInterviewees = (e, newValue) => {
@@ -67,24 +100,16 @@ const Scheduler = ({ props }) => {
 
   const handleSubmit = () => {
 
-    var admins = [];
-    for (var i=0; i < selectedInterviewers.length ; ++i)
-        admins.push(selectedInterviewers[i]['email']);
-
-    var participants = [];
-    for (var j=0; j < selectedInterviewees.length ; ++j)
-    participants.push(selectedInterviewees[j]['email']);
-
     const newInterview = {
       title: title,
       startTime: startTime.toDate(),
       endTime: endTime.toDate(),
-      admins: admins,
-      participants:participants,
+      admins: selectedInterviewers,
+      participants:selectedInterviewees,
     };
 
     // console.log(newInterview)
-
+    if (!editModeValue) {
     axios
         .post(baseURL + "interviews/", newInterview)
         .then((response) => {
@@ -94,19 +119,40 @@ const Scheduler = ({ props }) => {
           setOpen(true)
           // console.log(err.response.data);
           setError(err.response.data)
-        })
+        });
+      } else {
+        axios
+        .put(baseURL + "interviews/", {...newInterview,_id})
+        .then((response) => {
+          // console.log(response)
+          setInterviews([...interviews.slice(0,index),{...newInterview,_id},...interviews.slice(index+1)])})
+        .catch((err)=>{
+          setOpen(true)
+          // console.log(err.response.data);
+          setError(err.response.data)
+        });
+      }
   };
+
+  const handleCancel = () => {
+    setTitle("Title");
+    setStartTime(dayjs(new Date()));
+    setEndTime(dayjs(new Date()));
+    setSelectedInterviewers([]);
+    setSelectedInterviewees([]);
+    setID(null);
+    setIndex(0);
+  }
 
   useEffect(() => {
     axios.get(baseURL + "participants").then((response) => {
       const all = response.data;
       setInterviewers(
-        all.filter((participants) => participants.role === "Interviewer")
+        all.filter((participants) => participants.role === "Interviewer").map((p)=>p.email)
       );
       setInterviewees(
-        all.filter((participants) => participants.role === "Interviewee")
+        all.filter((participants) => participants.role === "Interviewee").map((p)=>p.email)
       );
-      // console.log(interviewees);
     });
   }, []);
 
@@ -118,7 +164,7 @@ const Scheduler = ({ props }) => {
             id="outlined-basic"
             label="Title"
             variant="outlined"
-            default="Title"
+            value={title}
             onChange={handleTitle}
           />
 
@@ -150,7 +196,7 @@ const Scheduler = ({ props }) => {
             limitTags={2}
             id="multiple-limit-tags"
             options={interviewers}
-            getOptionLabel={(option) => option.email}
+            getOptionLabel={(option) => option}
             renderInput={(params) => (
               <TextField {...params} label="Select Interviewers (Min 1)" />
             )}
@@ -164,7 +210,7 @@ const Scheduler = ({ props }) => {
             limitTags={2}
             id="multiple-limit-tags"
             options={interviewees}
-            getOptionLabel={(option) => option.email}
+            getOptionLabel={(option) => option}
             renderInput={(params) => (
               <TextField {...params} label="Select Interviewees (Min 1)" />
             )}
@@ -172,7 +218,11 @@ const Scheduler = ({ props }) => {
           />
 
           <Button variant="contained" onClick={handleSubmit}>
-            Create Interview
+            {editModeValue?"Edit":"Create Interview"}
+          </Button>
+
+          <Button variant="contained" onClick={handleCancel}>
+            Cancel
           </Button>
 
           {open && <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
